@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Little Memory - Azure Blossom</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;900&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --china-blue: #0f4c81; /* Deep Imperial/Porcelain Blue */
+            --cyan-bg: #e6f2ff;
+            --blue-light: #f0f7ff;
+            --gold: #b38f4d; /* Elegant Gold Accent */
+            --text-color: #0a2540;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--cyan-bg), var(--blue-light));
+            font-family: 'Quicksand', sans-serif;
+            color: var(--text-color);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        h1, h2, .elegant-font {
+            font-family: 'Noto Serif SC', serif;
+            color: var(--china-blue);
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+        /* Background awan tradisional cina biru */
+        .floral-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" opacity="0.08"><text x="10" y="50" font-size="40">☁️</text><text x="60" y="100" font-size="30">🌊</text></svg>');
+            z-index: -1;
+        }
+        .slide {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid rgba(15, 76, 129, 0.15);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(15, 76, 129, 0.05);
+        }
+        .slide.active {
+            display: flex;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        input[type="text"] {
+            padding: 12px;
+            border: 2px solid var(--china-blue);
+            border-radius: 25px;
+            font-size: 16px;
+            font-family: 'Quicksand', sans-serif;
+            outline: none;
+            margin-bottom: 20px;
+            width: 80%;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--text-color);
+        }
+        button {
+            background-color: var(--china-blue);
+            color: white;
+            border: 2px solid var(--gold);
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Quicksand', sans-serif;
+            transition: 0.3s;
+            box-shadow: 0 4px 6px rgba(15, 76, 129, 0.2);
+        }
+        button:hover {
+            background-color: #0a3357;
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(15, 76, 129, 0.3);
+        }
+        
+        /* Envelope Styles - Oriental Lantern/Letter Style */
+        .envelope-container { cursor: pointer; position: relative; margin-bottom: 20px;}
+        .envelope {
+            width: 150px; height: 100px;
+            background-color: #1a5f9c;
+            position: relative;
+            margin: 0 auto;
+            border-radius: 5px;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            border: 1px solid var(--gold);
+        }
+        .envelope::before {
+            content: ''; position: absolute; top: 0; left: 0;
+            border-left: 75px solid transparent; border-right: 75px solid transparent;
+            border-top: 50px solid #bcd8f1; z-index: 2; transition: all 0.5s;
+        }
+        .envelope.open::before {
+            border-top: 50px solid transparent; border-bottom: 50px solid #bcd8f1; top: -50px;
+        }
+        .hearts-burst { font-size: 30px; position: absolute; opacity: 0; top: 20px; transition: all 1s; z-index: 1;}
+        .envelope.open .hearts-burst { opacity: 1; transform: translateY(-80px) scale(1.5); }
+        
+        /* Games Styles */
+        .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        .memory-card {
+            width: 60px; height: 60px; background-color: var(--china-blue);
+            border: 1px solid var(--gold);
+            color: transparent; font-size: 30px; display: flex;
+            justify-content: center; align-items: center; border-radius: 10px;
+            cursor: pointer; transition: 0.3s; user-select: none;
+        }
+        .memory-card.flipped { background-color: white; color: initial; cursor: default; border: 2px solid var(--china-blue); }
+        
+        /* Slide 5 New Game Styles */
+        #clicker-game-area {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 20px; width: 100%;
+        }
+        #heart-btn {
+            font-size: 60px; cursor: pointer; user-select: none; transition: transform 0.1s; animation: pulse 1.5s infinite;
+        }
+        #heart-btn:active { transform: scale(0.8); }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .progress-box {
+            width: 80%; background-color: rgba(255, 255, 255, 0.8); border: 2px solid var(--china-blue); border-radius: 20px; height: 20px; margin-top: 15px; overflow: hidden; position: relative;
+        }
+        .progress-fill {
+            width: 0%; height: 100%; background-color: var(--china-blue); transition: width 0.2s;
+        }
+
+        /* Cards Slide */
+        .impression-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .imp-card {
+            width: 100px; height: 120px; background-color: var(--china-blue); color: white;
+            border: 1px solid var(--gold);
+            display: flex; justify-content: center; align-items: center;
+            border-radius: 10px; cursor: pointer; text-align: center; padding: 10px;
+            font-size: 14px; transition: 0.5s; box-sizing: border-box;
+        }
+        .imp-card.flipped { background-color: white; color: var(--china-blue); border: 2px solid var(--china-blue); }
+        
+        /* Letters */
+        .letter-box {
+            background: white; padding: 30px; border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(15, 76, 129, 0.1); margin-bottom: 20px;
+            border-top: 5px solid var(--china-blue);
+            border-bottom: 5px solid var(--gold);
+            text-align: left; line-height: 1.6;
+            max-height: 300px; overflow-y: auto;
+        }
+
+        .btn-container { position: relative; width: 100%; height: 100px; display: flex; justify-content: center; align-items: center; gap: 20px;}
+        #btn-no { position: absolute; background-color: #555; border: none; }
+    </style>
+</head>
+<body>
+    <div class="floral-bg"></div>
+
+    <div class="slide active" id="slide1">
+        <h1>Halo, siapa namamu? 🌊</h1>
+        <input type="text" id="readerName" placeholder="Ketik namamu di sini...">
+        <button onclick="saveName()">Enter</button>
+    </div>
+
+    <div class="slide" id="slide2">
+        <div class="envelope-container" onclick="openEnvelope()">
+            <div class="envelope" id="env">
+                <div class="hearts-burst">💎🏮☁️</div>
+            </div>
+            <p id="env-text" style="margin-top: 15px; font-weight: bold; color: var(--china-blue);">Open</p>
+        </div>
+        <p id="msg2" style="display: none; font-style: italic;">"a little memory from astra, please keep it well"</p>
+        <button id="btn2" style="display: none; margin-top: 15px;" onclick="nextSlide(3)">Enter</button>
+    </div>
+
+    <div class="slide" id="slide3">
+        <h2>Cocokkan Gambarnya! 🎀</h2>
+        <div class="memory-grid" id="memory-grid"></div>
+        <button id="btn3" style="display: none;" onclick="nextSlide(4)">Lanjut!</button>
+    </div>
+
+    <div class="slide" id="slide4">
+        <h2>Jawab yang bener mpruy! 🧠</h2>
+        <p id="qa-question" class="elegant-font" style="font-size: 20px;"></p>
+        <p id="qa-hint" style="font-size: 12px; color: gray;"></p>
+        <input type="text" id="qa-answer" placeholder="Jawabanmu...">
+        <button onclick="checkAnswer()">Jawab</button>
+    </div>
+
+    <div class="slide" id="slide5">
+        <h2>Kirim Energi buat Astraaaa! 💙</h2>
+        <p>Klik hatinya sampai penuh (10 kali) untuk mengisi daya !</p>
+        <div id="clicker-game-area">
+            <div id="heart-btn" onclick="clickHeart()">💙</div>
+            <div class="progress-box">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+        <button id="btn5" style="display: none;" onclick="nextSlide(6)">Lanjut!</button>
+    </div>
+
+    <div class="slide" id="slide6">
+        <h2>Astra cantik paling baik yaaa??? </h2>
+        <div class="btn-container">
+            <button onclick="nextSlide(7)">Yaa</button>
+            <button id="btn-no" onmouseover="moveNo()">GAK!</button>
+        </div>
+    </div>
+
+    <div class="slide" id="slide7">
+        <h2>My First Impression to You</h2>
+        <div class="impression-cards">
+            <div class="imp-card" onclick="flipImp(this, 'kalem (ytta)')">?</div>
+            <div class="imp-card" onclick="flipImp(this, '&quot;jusfren nya kiel??&quot;')">?</div>
+            <div class="imp-card" onclick="flipImp(this, 'Baik betul anjir')">?</div>
+            <div class="imp-card" onclick="flipImp(this, 'asbun')">?</div>
+            <div class="imp-card" onclick="flipImp(this, 'gua tau ni orang bakal jadi biefef gue')">?</div>
+        </div>
+        <button id="btn7" style="display: none;" onclick="nextSlide(8)">Next</button>
+    </div>
+
+    <div class="slide" id="slide8">
+        <h2>Coba deskripsiin gua(astra)!💌</h2>
+        <p>Tulis pesan rahasia disini ya:</p>
+        <a href="https://ngl.link/astrasayang" target="_blank" style="text-decoration: none;">
+            <button style="background-color: #0f4c81; margin-bottom: 20px;">NGL Link</button>
+        </a>
+        <br>
+        <button onclick="nextSlide(9)">Next</button>
+    </div>
+
+    <div class="slide" id="slide9">
+        <div class="letter-box">
+            <h2 style="text-align: left; margin-top:0;">Deskripsi untuk <span id="display-name">hiraya</span></h2>
+            <p>Halo hiraya sayaaanggg.</p>
+            <p>Gua gatau dunia apa yang sedang lu laluin, tapi semangat terus ya!</p>
+            <p>menurut gua lo keren banget dengan kepribadian "people pleaser" itu. coba liat dari sisi yang lain, lu keren bisa terus ngehargain orang tanpa mandng siapa orang itu, lu bahkan baik ke orang orang yang udah jahat ke lu. itu suatu hal yang keren banget ray. funfact gua dulu kaya lo kok, cuma gua ga sekuat elu bisa bertahan selama itu, gua sekarang milih jadi orang yang bodoamat dan baik ke orang yang baik sama gua doang.</p>
+            <p>dann kalo lu nyaman sama dunia lu yang sekaarang, keep going aja. tapi misal lo ga nyaman, jangan takut buat berubah. everyone have they own limits yk. just remember kalo lu berharga buat orang sekitar lu!</p>
+            <p>&Love from astra</p>
+        </div>
+        <button onclick="nextSlide(10)">Next</button>
+    </div>
+
+    <div class="slide" id="slide10">
+        <div class="letter-box">
+            <h2 style="text-align: left; margin-top:0;">MOST IMPORTANT</h2>
+            <p>makasih ya sudah mau jadi temen gua, i really really hope our friendships last long!</p>
+            <p>terima kasih udah milih buat tetap jadi temen gue sampai hari ini. mungkin gue ga selalu nunjukin, tapi gue bener-bener menghargai semua waktu, perhatian, dan kebaikan yang udah lu kasih. semoga nanti gue juga bisa jadi temen yang sama baiknya buat lu.</p>
+            <p>you're really important for me and for everyone else!</p>
+        </div>
+        <button onclick="nextSlide(11)">Next</button>
+    </div>
+
+    <div class="slide" id="slide11">
+        <h1 style="font-size: 3em;">Terimakasih sudah bertahan!</h1>
+        <p>Astra loves you!</p>
+    </div>
+
+    <script>
+        let userName = "";
+        function showSlide(index) {
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            document.getElementById('slide' + index).classList.add('active');
+        }
+        function nextSlide(index) { showSlide(index); }
+
+        // Slide 1
+        function saveName() {
+            userName = document.getElementById('readerName').value || "Manis";
+            document.getElementById('display-name').innerText = userName;
+            nextSlide(2);
+        }
+
+        // Slide 2
+        function openEnvelope() {
+            document.getElementById('env').classList.add('open');
+            document.getElementById('env-text').style.display = 'none';
+            setTimeout(() => {
+                document.getElementById('msg2').style.display = 'block';
+                document.getElementById('btn2').style.display = 'inline-block';
+            }, 800);
+        }
+
+        // Slide 3: Memory Game (Menggunakan paduan ikon biru/oriental)
+        const emojis = ['🌊','🌊','🏮','🏮','💎','💎','☁️','☁️'];
+        let shuffled = emojis.sort(() => 0.5 - Math.random());
+        let grid = document.getElementById('memory-grid');
+        let flippedCards = [];
+        let matched = 0;
+
+        shuffled.forEach((emoji, i) => {
+            let card = document.createElement('div');
+            card.classList.add('memory-card');
+            card.dataset.emoji = emoji;
+            card.innerHTML = "?";
+            card.onclick = function() {
+                if (this.classList.contains('flipped') || flippedCards.length === 2) return;
+                this.classList.add('flipped');
+                this.innerHTML = this.dataset.emoji;
+                flippedCards.push(this);
+
+                if (flippedCards.length === 2) {
+                    if (flippedCards[0].dataset.emoji === flippedCards[1].dataset.emoji) {
+                        matched += 2;
+                        flippedCards = [];
+                        if (matched === emojis.length) document.getElementById('btn3').style.display = 'inline-block';
+                    } else {
+                        setTimeout(() => {
+                            flippedCards[0].classList.remove('flipped');
+                            flippedCards[0].innerHTML = "?";
+                            flippedCards[1].classList.remove('flipped');
+                            flippedCards[1].innerHTML = "?";
+                            flippedCards = [];
+                        }, 800);
+                    }
+                }
+            };
+            grid.appendChild(card);
+        });
+
+        // Slide 4: Q&A
+        const qaData = [
+            { q: "Nama cc pertama kita?", a: "midnight", hint: "Hint: Waktu tengah malam dalam bahasa inggris" },
+            { q: "Kepanjangan mbg?", a: "mas bahlil ganteng", hint: "Hint: m... b... g..." },
+            { q: "Temanku semua pada jahat-....?", a: "tante", hint: "Hint: Lanjutan lagu viral" },
+            { q: "90 x 900 = ?", a: "81000", hint: "Hint: pakelah kalkulator mu" },
+            { q: "Sila ketiga?", a: "persatuan indonesia", hint: "Hint: masa gatau jir" }
+        ];
+        let currentQ = 0;
+        function loadQ() {
+            document.getElementById('qa-question').innerText = qaData[currentQ].q;
+            document.getElementById('qa-hint').innerText = qaData[currentQ].hint;
+            document.getElementById('qa-answer').value = "";
+        }
+        function checkAnswer() {
+            let ans = document.getElementById('qa-answer').value.toLowerCase().trim();
+            if (ans === qaData[currentQ].a) {
+                currentQ++;
+                if (currentQ < qaData.length) {
+                    loadQ();
+                } else {
+                    alert("Lah kok pinter? anjaayyyy 🎉");
+                    nextSlide(5);
+                }
+            } else {
+                alert("Salah wleee, coba lagi! 😝");
+            }
+        }
+        loadQ();
+
+        // Slide 5: Heart Clicker Game
+        let clickCount = 0;
+        const maxClicks = 10;
+        function clickHeart() {
+            if (clickCount >= maxClicks) return;
+            clickCount++;
+            let percentage = (clickCount / maxClicks) * 100;
+            document.getElementById('progress-fill').style.width = percentage + '%';
+            
+            if (clickCount >= maxClicks) {
+                document.getElementById('heart-btn').style.animation = 'none';
+                document.getElementById('heart-btn').innerHTML = "Makasih lvyu! 🌊💎";
+                document.getElementById('btn5').style.display = 'inline-block';
+            }
+        }
+
+        // Slide 6: Runaway Button
+        function moveNo() {
+            let btn = document.getElementById('btn-no');
+            let container = document.querySelector('.btn-container');
+            let maxX = container.clientWidth - btn.clientWidth;
+            let maxY = 50; 
+            let randomX = Math.random() * maxX;
+            let randomY = (Math.random() * maxY) - (maxY/2);
+            btn.style.left = randomX + 'px';
+            btn.style.transform = `translateY(${randomY}px)`;
+        }
+
+        // Slide 7: Cards
+        let impFlipped = 0;
+        function flipImp(el, text) {
+            if(!el.classList.contains('flipped')) {
+                el.classList.add('flipped');
+                el.innerText = text;
+                impFlipped++;
+                if(impFlipped === 5) {
+                    document.getElementById('btn7').style.display = 'inline-block';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
